@@ -1,1 +1,0 @@
-<?php require 'includes/db.php'; \ = getDB(); try { \->query('SELECT DISTINCT l.id, l.name FROM locations l INNER JOIN trucks t ON t.location_id = l.id AND t.is_active = 1'); echo 'OK'; } catch (Exception \) { echo \->getMessage(); }
