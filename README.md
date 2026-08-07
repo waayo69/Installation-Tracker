@@ -115,19 +115,24 @@ Installation Tracker/
 ## Features
 
 - **Dashboard**: Summary cards with completion percentages, filterable data table
+- **Inventory Management**: Track hardware stock (Omnitraq, MDVR, Door Sensors). Deducts automatically based on technician installations.
+- **Multi-Location Support**: Segregates inventory and team assignments by location (HQ + sites).
+- **Stock Warnings**: Low-stock alerts (under 5) across both Admin panels and the Technician app.
+- **Bulk Operations**: Bulk-add inventory and rapidly deploy standard hardware across all locations simultaneously.
 - **Truck Management**: Full CRUD, install tracking (Omnitraq, MDVR, Door Sensor)
 - **Hauler Management**: Add/edit/deactivate companies
 - **Technician Management**: Admin sets passwords, assign to truck installs
-- **Technician Portal**: View assigned trucks, update install status
+- **Technician Portal**: View assigned trucks, update install status, view low-stock warnings
 - **Filters**: Location, hauler, technician, install status (URL-bookmarkable)
 - **CSV Export**: Export filtered data
 - **Responsive**: Works on mobile and desktop
 
 ## Authentication
 
-| Role       | Login URL                      | Access                        |
-|------------|--------------------------------|-------------------------------|
-| Admin      | `/admin/login.php`             | Full CRUD, all trucks, reports|
-| Technician | `/tech/login.php`              | Assigned trucks only          |
+| Role          | Login URL                      | Access                                                       |
+|---------------|--------------------------------|--------------------------------------------------------------|
+| Admin         | `/admin/login.php`             | Full CRUD, all trucks, HQ inventory, reports                 |
+| Team Leader   | `/admin/login.php`             | Site-specific CRUD, local site inventory, local reports      |
+| Technician    | `/tech/login.php`              | Assigned trucks only, update install status, deduct inventory|
 
-Technician passwords are set by the admin. Sessions timeout after 8 hours.
+Technician and Team Leader passwords are set by the admin. Sessions timeout after 8 hours.
