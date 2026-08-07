@@ -1,0 +1,11 @@
+{
+    "name": "tank-truck-tracker/app",
+    "description": "Tank Truck Installation Tracking Website",
+    "type": "project",
+    "require": {
+        "phpoffice/phpspreadsheet": "^1.29"
+    },
+    "autoload": {
+        "files": []
+    }
+}
