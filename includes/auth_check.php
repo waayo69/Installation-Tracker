@@ -122,3 +122,6 @@ function current_location_id(): ?int {
 function current_admin_id(): ?int {
     return $_SESSION['admin_id'] ?? null;
 }
+/**
+ * bogbilat
+ */
