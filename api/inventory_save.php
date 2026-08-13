@@ -43,7 +43,9 @@ try {
     
     // Determine target locations for insertion
     $target_locations = [];
+    $is_global = 0;
     if ($location_id === 'ALL' && !$id) {
+        $is_global = 1;
         // Get all locations
         $target_locations[] = null; // HQ
         $locStmt = $db->query("SELECT id FROM locations");
@@ -97,10 +99,10 @@ try {
                 $stmt->execute([$name, $linked_system, $deduction_type, $quantity, $loc, $id]);
             } else {
                 $stmt = $db->prepare("
-                    INSERT INTO dbo.inventory_items (name, linked_system, deduction_type, quantity, location_id)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO dbo.inventory_items (name, linked_system, deduction_type, quantity, location_id, is_global)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 ");
-                $stmt->execute([$name, $linked_system, $deduction_type, $quantity, $loc]);
+                $stmt->execute([$name, $linked_system, $deduction_type, $quantity, $loc, $is_global]);
             }
         }
     }

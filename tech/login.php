@@ -62,93 +62,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Technician Login — <?= APP_NAME ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
-    <link rel="stylesheet" href="../assets/css/style.css">
     <style>
-        :root {
-            --bg-primary: #0a0e1a;
-            --bg-card: #1a1f2e;
-            --bg-input: #141925;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --border-color: #1e293b;
-            --accent-primary: #6366f1;
-            --accent-secondary: #8b5cf6;
-            --accent-glow: rgba(99, 102, 241, 0.25);
-            --accent-green: #22c55e;
-            --accent-red: #ef4444;
-            --accent-red-bg: rgba(239, 68, 68, 0.12);
-        }
-        * { box-sizing: border-box; }
         body.login-page {
             display: flex; align-items: center; justify-content: center;
-            min-height: 100vh; background: var(--bg-primary);
-            margin: 0; font-family: 'Inter', -apple-system, sans-serif;
-            color: var(--text-primary);
+            min-height: 100vh;
+            background: var(--bg-primary);
+            /* Ambient login background */
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 60%),
+                radial-gradient(circle at 100% 0%, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 0% 100%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
         }
+
         .login-card {
-            background: var(--bg-card);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
+            border-radius: var(--radius-xl);
             padding: 48px 40px;
-            width: 100%; max-width: 420px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            width: 100%; max-width: 420px; margin: 20px;
+            box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.1);
         }
+
         .login-card .logo { text-align: center; margin-bottom: 32px; }
         .login-card .logo h1 {
-            font-size: 1.6rem; font-weight: 800;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            font-size: 1.8rem; font-weight: 800;
+            background: linear-gradient(135deg, #fff, #94a3b8);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             margin: 0 0 4px;
         }
-        .login-card .logo p { color: var(--text-muted); font-size: 0.875rem; margin: 0; }
-        .login-card .role-badge {
-            display: inline-block; background: var(--accent-green);
-            color: #fff; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;
-            padding: 4px 12px; border-radius: 20px; margin-top: 10px;
+        .login-card .logo p { color: var(--text-muted); font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+        .role-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-green), #047857);
+            color: #fff; font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 0.5px; padding: 4px 12px;
+            border-radius: var(--radius-pill); margin-top: 12px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
-        .form-group { margin-bottom: 20px; }
-        .form-group label {
-            display: block; font-size: 0.8rem; font-weight: 600;
-            color: var(--text-secondary); margin-bottom: 8px;
-            text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .form-input {
-            width: 100%; background: var(--bg-input);
-            border: 1px solid var(--border-color); border-radius: 10px;
-            padding: 12px 16px; color: var(--text-primary);
-            font-size: 0.95rem; font-family: inherit; transition: all 0.2s;
-        }
-        .form-input:focus {
-            outline: none; border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-        select.form-input {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='2' fill='none'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            padding-right: 40px;
-        }
-        .btn-primary {
-            width: 100%; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            color: #fff; border: none; border-radius: 10px; padding: 12px 20px;
-            font-size: 0.95rem; font-weight: 700; font-family: inherit; cursor: pointer;
-            box-shadow: 0 4px 15px var(--accent-glow); transition: all 0.2s;
-            margin-top: 8px;
-        }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--accent-glow); }
+
         .alert-error {
             background: var(--accent-red-bg); color: var(--accent-red);
-            border: 1px solid rgba(239,68,68,0.3); border-radius: 10px;
+            border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-md);
             padding: 12px 16px; font-size: 0.875rem; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px; font-weight: 600;
         }
-        .link-muted { color: var(--text-muted); font-size: 0.85rem; text-decoration: none; transition: color 0.2s; }
+        
+        .link-muted { color: var(--text-muted); font-size: 0.85rem; text-decoration: none; transition: color 0.2s; font-weight: 600; }
         .link-muted:hover { color: var(--accent-primary); }
     </style>
 </head>
@@ -156,31 +123,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="login-card">
         <div class="logo">
             <h1>🚛 <?= APP_NAME ?></h1>
-            <p>Installation Tracking System</p>
+            <p>Installation Tracking</p>
             <span class="role-badge">TECHNICIAN PORTAL</span>
         </div>
-
+        
         <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); color: #eab308; border-radius: 8px; padding: 12px; font-size: 0.75rem; line-height: 1.4; margin-bottom: 24px; text-align: center;">
             <strong style="display:block; margin-bottom: 4px; color: #facc15;">⚠️ EXPERIMENTAL SYSTEM</strong>
             This tracker is an experimental tool created solely for tracking automation. It is <strong>NOT</strong> officially approved by Ma'am and Sir.
         </div>
 
         <?php if ($error): ?>
-            <div class="alert alert-error">❌ <?= htmlspecialchars($error) ?></div>
+            <div class="alert-error">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <?= htmlspecialchars($error) ?>
+            </div>
         <?php endif; ?>
 
         <form method="POST" autocomplete="off">
             <div class="form-group">
                 <label for="nickname">Username</label>
-                <input type="text" id="nickname" name="nickname" class="form-input"
-                       placeholder="Enter your username" value="<?= htmlspecialchars($_POST['nickname'] ?? '') ?>" required>
+                <input type="text" id="nickname" name="nickname" class="form-input" placeholder="Enter your username" required autofocus value="<?= htmlspecialchars($_POST['nickname'] ?? '') ?>">
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" class="form-input"
-                       placeholder="Enter your password" required>
+                <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
             </div>
-            <button type="submit" class="btn-primary">Sign In</button>
+            <button type="submit" class="btn btn-primary btn-full mt-12" style="margin-top: 12px;">Sign In</button>
         </form>
 
         <div style="text-align:center; margin-top: 24px;">

@@ -189,23 +189,27 @@
             }
         });
 
-        const renderDeviceRow = (truckId, type, status, label, isAssigned) => {
-            if (!isAssigned) return '';
-            const isDone = status !== 'not_started';
-            
-            let statusIcon = '🔴';
-            if (status === 'installed' || status === 'verified' || status == 1) statusIcon = '🟢';
-            else if (status === 'in_progress') statusIcon = '🟡';
+        const renderDeviceRow = (truck, type, status, label, isAssigned) => {
+            const isDone = status === 'installed' || status === 'verified' || status == 1;
+            const isInProgress = status === 'in_progress';
 
+            let statusIcon = '🔴';
+            if (isDone) statusIcon = '🟢';
+            else if (isInProgress) statusIcon = '🟡';
+
+            const statusLabel = isDone ? 'Installed' : (isInProgress ? 'In Progress' : 'Not Star...');
             const actionLabel = isDone ? 'Done' : 'Update';
             const actionClass = isDone ? 'done' : '';
-            
+            const rowClass = isAssigned ? 'compact-device-row clickable' : 'compact-device-row unassigned';
+            const dataAttrs = isAssigned ? `data-truck-id="${truck.id}" data-type="${type}"` : '';
+            const disabledClass = isAssigned ? '' : 'disabled';
+
             return `
-                <tr>
-                    <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${label}</td>
-                    <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${statusIcon} ${status === 'not_started' || status == 0 ? 'Not Started' : (status === 'in_progress' ? 'In Progress' : 'Installed')}</td>
-                    <td style="text-align:right;">
-                        <button class="compact-action-link ${actionClass}" onclick="openInstallForm(${truckId}, '${type}')">${actionLabel}</button>
+                <tr class="${rowClass}" ${dataAttrs}>
+                    <td>${label}</td>
+                    <td>${statusIcon} ${statusLabel}</td>
+                    <td>
+                        <span class="compact-action-link ${actionClass} ${disabledClass}">${actionLabel}</span>
                     </td>
                 </tr>
             `;
@@ -243,19 +247,19 @@
                             </div>
                         </div>
                         
-                        <div style="background: rgba(0,0,0,0.15); border-radius: var(--radius-md); padding: 8px; margin-top: 12px;">
-                            <table class="compact-device-table" style="table-layout: fixed; width: 100%;">
+                        <div class="compact-device-table-wrapper">
+                            <table class="compact-device-table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 40%;">Device</th>
-                                        <th style="width: 35%;">Status</th>
-                                        <th style="width: 25%; text-align:right;">Action</th>
+                                        <th>Device</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${renderDeviceRow(t.id, 'OMNITRAQ', t.omnitraq_status, 'OMNITraq', t.assigned_types.includes('OMNITRAQ'))}
-                                    ${renderDeviceRow(t.id, 'MDVR', t.mdvr_status, 'MDVR', t.assigned_types.includes('MDVR'))}
-                                    ${renderDeviceRow(t.id, 'DOOR_SENSOR', t.door_sensor_status, 'Door Sensor', t.assigned_types.includes('DOOR_SENSOR'))}
+                                    ${renderDeviceRow(t, 'OMNITRAQ', t.omnitraq_status, 'OMNITraq', t.assigned_types.includes('OMNITRAQ'))}
+                                    ${renderDeviceRow(t, 'MDVR', t.mdvr_status, 'MDVR', t.assigned_types.includes('MDVR'))}
+                                    ${renderDeviceRow(t, 'DOOR_SENSOR', t.door_sensor_status, 'Door Sensor', t.assigned_types.includes('DOOR_SENSOR'))}
                                 </tbody>
                             </table>
                         </div>
@@ -289,7 +293,7 @@
             const collapsedClass = (groupId !== 'today' || allComplete) ? 'collapsed' : '';
             return `
                 <div class="collapsible-group" style="margin-bottom: 24px;">
-                    <div class="date-header collapsible-header ${collapsedClass}" id="header-${groupId}" onclick="toggleDateGroup('${groupId}')">
+                    <div class="date-header collapsible-header ${collapsedClass}" id="header-${groupId}">
                         <span class="toggle-icon">▼</span>
                         ${title} (${groupTrucks.length})
                     </div>
@@ -312,9 +316,33 @@
         }
 
         container.innerHTML = html;
+
+        // Delegated click handler — remove old one first to avoid stacking
+        if (container._clickHandler) {
+            container.removeEventListener('click', container._clickHandler);
+        }
+        container._clickHandler = function(e) {
+            // Device row click
+            const row = e.target.closest('.compact-device-row.clickable');
+            if (row) {
+                const truckId = parseInt(row.dataset.truckId);
+                const type = row.dataset.type;
+                const truck = (window.loadedTrucks || []).find(t => t.id === truckId);
+                openInstallForm(truckId, type, truck);
+                return;
+            }
+            // Collapsible date header click
+            const header = e.target.closest('.collapsible-header');
+            if (header) {
+                const groupId = header.id.replace('header-', '');
+                toggleDateGroup(groupId);
+                return;
+            }
+        };
+        container.addEventListener('click', container._clickHandler);
     }
 
-    window.openInstallForm = function (truckId, installType) {
+    window.openInstallForm = function (truckId, installType, truck) {
         Modal.openDialog('installPanel');
         const title = document.getElementById('installPanelTitle');
         const body = document.getElementById('installPanelBody');
@@ -511,6 +539,57 @@
         }
 
         body.innerHTML = formHtml;
+
+        // Pre-fill form fields with existing truck data
+        if (truck) {
+            const form = document.getElementById('techInstallForm');
+            if (!form) return;
+
+            const setVal = (name, val) => {
+                const el = form.querySelector(`[name="${name}"]`);
+                if (el && val != null && val !== '') el.value = val;
+            };
+            const setChecked = (name, val) => {
+                const el = form.querySelector(`[name="${name}"]`);
+                if (el) el.checked = !!parseInt(val);
+            };
+
+            if (installType === 'OMNITRAQ') {
+                setVal('omnitraq_no', truck.omnitraq_no);
+                setVal('imei', truck.omnitraq_imei);
+                setVal('status', truck.omnitraq_status !== 'not_started' ? truck.omnitraq_status : null);
+            }
+
+            if (installType === 'MDVR') {
+                setVal('device_serial', truck.mdvr_imei);
+                setVal('sim_iccid', truck.sim_iccid);
+                setVal('status', truck.mdvr_status !== 'not_started' ? truck.mdvr_status : null);
+                // Sync radio card visual for mdvr_type
+                if (truck.mdvr_type) {
+                    setVal('mdvr_type', truck.mdvr_type);
+                    form.querySelectorAll('.radio-card').forEach(c => {
+                        const isMatch = (truck.mdvr_type === 'OLD' && c.querySelector('.radio-label')?.textContent.includes('Old'))
+                                     || (truck.mdvr_type === 'NEW' && c.querySelector('.radio-label')?.textContent.includes('New'));
+                        c.classList.toggle('selected', isMatch);
+                        c.style.borderColor = isMatch ? 'var(--accent-primary)' : 'var(--border-color)';
+                        c.style.background  = isMatch ? 'rgba(99, 102, 241, 0.1)' : 'rgba(0,0,0,0.2)';
+                    });
+                }
+            }
+
+            if (installType === 'DOOR_SENSOR') {
+                const installed = truck.door_sensor_status === 'installed' ? '1' : '0';
+                setVal('installed', installed);
+                // Sync radio card visual
+                form.querySelectorAll('.radio-card').forEach(c => {
+                    const isInstalled = c.querySelector('.radio-label')?.textContent.includes('Installed');
+                    const isMatch = (installed === '1' && isInstalled) || (installed === '0' && !isInstalled);
+                    c.classList.toggle('selected', isMatch);
+                    c.style.borderColor = isMatch ? 'var(--accent-primary)' : 'var(--border-color)';
+                    c.style.background  = isMatch ? 'rgba(99, 102, 241, 0.1)' : 'rgba(0,0,0,0.2)';
+                });
+            }
+        }
 
         // Bind form submit
         document.getElementById('techInstallForm').addEventListener('submit', async (e) => {

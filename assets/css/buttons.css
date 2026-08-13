@@ -1,0 +1,94 @@
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-4);
+    height: 32px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--duration) var(--ease-out);
+    text-decoration: none;
+    white-space: nowrap;
+    background: transparent;
+}
+
+.btn-primary {
+    background: var(--accent-primary);
+    color: #ffffff;
+    border-color: var(--accent-primary);
+}
+
+.btn-primary:hover {
+    background: var(--accent-primary-hover);
+    border-color: var(--accent-primary-hover);
+}
+
+.btn-secondary {
+    background: var(--bg-card-hover);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--accent-secondary-hover);
+    border-color: var(--border-hover);
+}
+
+.btn-danger {
+    background: var(--accent-danger);
+    color: #ffffff;
+    border-color: var(--accent-danger);
+}
+
+.btn-danger:hover {
+    background: var(--accent-danger-hover);
+    border-color: var(--accent-danger-hover);
+}
+
+.btn-outline {
+    background: transparent;
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+.btn-outline:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+}
+
+.btn-sm {
+    height: 28px;
+    padding: 0 var(--space-3);
+    font-size: 0.8125rem;
+    gap: 4px;
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.btn-icon:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+}

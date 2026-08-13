@@ -52,10 +52,29 @@ require_once __DIR__ . '/../includes/layout_header.php';
 </div>
 
 <!-- Charts Row -->
-<div class="charts-grid" id="chartsGrid" style="grid-template-columns: 1fr;">
-    <div class="chart-card">
+<div class="charts-grid" id="chartsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4);">
+    <div class="chart-card" style="grid-column: span 2;">
         <h4>Installations by Location</h4>
         <div class="chart-container"><canvas id="locationChart"></canvas></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: var(--space-4); min-height: 0; max-height: 420px;">
+        <div class="chart-card" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+            <h4>🏆 Top Technicians</h4>
+            <div class="tabs" style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <button class="btn btn-sm btn-primary" id="tabDaily" onclick="switchLeaderboard('daily')">Daily</button>
+                <button class="btn btn-sm btn-outline" id="tabWeekly" onclick="switchLeaderboard('weekly')">Weekly</button>
+                <button class="btn btn-sm btn-outline" id="tabMonthly" onclick="switchLeaderboard('monthly')">Monthly</button>
+            </div>
+            <div id="leaderboardList" style="display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto; min-height: 0; padding-right: 4px;">
+                <div class="text-muted text-sm">Loading rankings...</div>
+            </div>
+        </div>
+        <div class="chart-card" style="flex: 0 1 auto; max-height: 180px; display: flex; flex-direction: column; min-height: 0;">
+            <h4 style="color: var(--accent-danger); margin-bottom: 12px;">⚠️ Low Stock Alerts</h4>
+            <div id="inventoryAlertsList" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; min-height: 0; padding-right: 4px;">
+                <div class="text-muted text-sm">Checking inventory...</div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -63,55 +82,6 @@ require_once __DIR__ . '/../includes/layout_header.php';
     <h3>Recent Installations</h3>
 </div>
 
-<!-- Filter Bar -->
-<div class="filter-bar mb-4" id="filterBar">
-    <select id="filterLocation" class="form-select">
-        <option value="">All Locations</option>
-    </select>
-    <select id="filterHauler" class="form-select">
-        <option value="">All Haulers</option>
-    </select>
-    <select id="filterTechnician" class="form-select">
-        <option value="">All Technicians</option>
-    </select>
-    <select id="filterOmnitraq" class="form-select">
-        <option value="">Omnitraq: All</option>
-        <option value="not_started">Not Started</option>
-        <option value="installed">Installed</option>
-        <option value="verified">Verified</option>
-    </select>
-    <select id="filterMdvr" class="form-select">
-        <option value="">MDVR: All</option>
-        <option value="not_started">Not Started</option>
-        <option value="installed">Installed</option>
-        <option value="verified">Verified</option>
-    </select>
-    <select id="filterDoor" class="form-select">
-        <option value="">Door Sensor: All</option>
-        <option value="not_started">Not Installed</option>
-        <option value="installed">Installed</option>
-    </select>
-    <select id="filterOverall" class="form-select">
-        <option value="">Overall: All</option>
-        <option value="not_started">Not Started</option>
-        <option value="in_progress">In Progress</option>
-        <option value="completed">Completed</option>
-    </select>
-    <button class="btn btn-sm btn-outline btn-icon-text" id="btnClearFilters">
-        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-        Clear
-    </button>
-</div>
-
-<div style="margin-bottom: 24px;">
-    <div class="search-input-wrapper">
-        <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" id="globalSearch" class="topbar-input" placeholder="Search by Plate # or ME No..." autocomplete="off">
-    </div>
-</div>
 
 <!-- Data Table -->
 <div class="table-wrapper">

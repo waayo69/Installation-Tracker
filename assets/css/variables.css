@@ -1,0 +1,163 @@
+/* ── Google Font ──────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+
+/* ── CSS Custom Properties ────────────────────────────────── */
+:root {
+    /* Color System (Dark Mode Default) */
+    --bg-primary: #0d1117;     /* GitHub Dark inspired background */
+    --bg-secondary: #161b22;
+    --bg-sidebar: #161b22;
+    --bg-card: #161b22;
+    --bg-card-hover: #1f242c;
+    --bg-input: #0d1117;
+    --bg-modal: #161b22;
+
+    --text-primary: #e6edf3;
+    --text-secondary: #7d8590;
+    --text-muted: #6e7681;
+    --text-inverse: #ffffff;
+
+    --border-color: #30363d;
+    --border-focus: #58a6ff;
+    --border-hover: #8b949e;
+
+    /* Base Colors - Professional/Flat */
+    --accent-primary: #2f81f7;
+    --accent-primary-hover: #1f6feb;
+    --accent-primary-bg: rgba(47, 129, 247, 0.15);
+
+    --accent-secondary: #21262d;
+    --accent-secondary-hover: #30363d;
+    
+    --accent-success: #238636;
+    --accent-success-hover: #2ea043;
+    --accent-success-bg: rgba(46, 160, 67, 0.15);
+    
+    --accent-warning: #d29922;
+    --accent-warning-hover: #e3b341;
+    --accent-warning-bg: rgba(210, 153, 34, 0.15);
+    
+    --accent-danger: #da3633;
+    --accent-danger-hover: #f85149;
+    --accent-danger-bg: rgba(248, 81, 73, 0.15);
+    
+    --accent-info: #0550ae;
+    --accent-info-bg: rgba(5, 80, 174, 0.15);
+
+    --accent-gray: #6e7681;
+    --accent-gray-bg: rgba(110, 118, 129, 0.15);
+
+    /* Layout & Sizing */
+    --sidebar-width: 240px;
+    --topbar-height: 56px; /* Tighter topbar */
+
+    /* Strict 8px Spacing System */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+
+    /* Radii - Enterprise sizing */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-pill: 9999px; /* Only for very specific things like badges */
+
+    /* Practical Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    /* Animation - Fast & Snappy */
+    --duration: 150ms;
+    --ease-out: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Light Theme Overrides */
+[data-theme="light"] {
+    --bg-primary: #f6f8fa;
+    --bg-secondary: #ffffff;
+    --bg-sidebar: #f6f8fa;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f3f4f6;
+    --bg-input: #ffffff;
+    --bg-modal: #ffffff;
+
+    --text-primary: #1f2328;
+    --text-secondary: #656d76;
+    --text-muted: #8c959f;
+    --text-inverse: #ffffff;
+
+    --border-color: #d0d7de;
+    --border-focus: #0969da;
+    --border-hover: #8c959f;
+
+    --accent-primary: #0969da;
+    --accent-primary-hover: #0550ae;
+    --accent-primary-bg: rgba(9, 105, 218, 0.1);
+
+    --accent-secondary: #f3f4f6;
+    --accent-secondary-hover: #e5e7eb;
+    
+    --accent-success: #1a7f37;
+    --accent-success-hover: #116329;
+    --accent-success-bg: rgba(26, 127, 55, 0.1);
+    
+    --accent-warning: #9a6700;
+    --accent-warning-hover: #7d5300;
+    --accent-warning-bg: rgba(154, 103, 0, 0.1);
+    
+    --accent-danger: #d1242f;
+    --accent-danger-hover: #a40e26;
+    --accent-danger-bg: rgba(209, 36, 47, 0.1);
+
+    --shadow-sm: 0 1px 2px rgba(27, 31, 36, 0.04);
+    --shadow-md: 0 4px 12px rgba(27, 31, 36, 0.08);
+    --shadow-lg: 0 8px 24px rgba(27, 31, 36, 0.12);
+}
+
+/* ── Reset & Base ─────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.5;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    transition: color var(--duration);
+}
+
+a:hover {
+    color: var(--accent-primary-hover);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif; /* Dropping Outfit for standard Inter enterprise look */
+    font-weight: 600;
+    color: var(--text-primary);
+}

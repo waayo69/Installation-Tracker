@@ -151,7 +151,7 @@ async function openTruckDetail(truckId) {
 }
 
 /* ── Dynamic Edit Modals ──────────────────────────────────── */
-window.openEditModal = function openEditModal(type) {
+window.openEditModal = async function openEditModal(type) {
     if (!currentTruckData) return;
     const truck = currentTruckData;
     const technicians = RefData.get('technicians');
@@ -173,7 +173,11 @@ window.openEditModal = function openEditModal(type) {
         title = 'Edit Truck Information';
         const isAdmin = (window.USER_ROLE || '') === 'admin';
         const haulerOptions = RefData.get('haulers').map(h => `<option value="${h.id}" ${h.id === truck.hauler_id ? 'selected' : ''}>${h.name}</option>`).join('');
-        const rawOptions = RefData.get('options');
+        
+        let rawOptions = RefData.get('options');
+        if (!rawOptions || Object.keys(rawOptions).length === 0) {
+            rawOptions = await RefData.load('options', `${BASE_URL}/admin/api/options.php`);
+        }
         const options = (rawOptions && !Array.isArray(rawOptions)) ? rawOptions : {locations: [], models: []};
         
         let locs = Array.isArray(options.locations) ? [...options.locations] : [];

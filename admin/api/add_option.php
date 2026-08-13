@@ -2,7 +2,7 @@
 // admin/api/add_option.php — custom tractor models only (locations live in dbo.locations)
 require_once __DIR__ . '/../../includes/auth_check.php';
 require_once __DIR__ . '/../../includes/functions.php';
-require_admin(true);
+require_admin_or_team_leader(true);
 
 $cacheFile = __DIR__ . '/../../custom_options.json';
 

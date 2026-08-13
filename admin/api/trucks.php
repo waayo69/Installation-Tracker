@@ -187,11 +187,16 @@ switch (method()) {
             $assignments = $stmt->fetchAll();
 
             $techMap = [];
+            $techDetails = [];
             foreach ($assignments as $a) {
                 $techMap[$a['truck_id']][] = $a['nickname'] . ' (' . $a['install_type'] . ')';
+                $techDetails[$a['truck_id']][$a['install_type']][] = $a['nickname'];
             }
             foreach ($rows as &$row) {
                 $row['technicians'] = implode(', ', $techMap[$row['id']] ?? []);
+                $row['omnitraq_tech'] = implode(', ', $techDetails[$row['id']]['OMNITRAQ'] ?? []);
+                $row['mdvr_tech'] = implode(', ', $techDetails[$row['id']]['MDVR'] ?? []);
+                $row['door_sensor_tech'] = implode(', ', $techDetails[$row['id']]['DOOR_SENSOR'] ?? []);
             }
         }
 

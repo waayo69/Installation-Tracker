@@ -103,11 +103,22 @@ ob_start();
         currentPage = page;
         const params = new URLSearchParams({ page });
         const search = document.getElementById('truckSearch').value;
-        const hauler = document.getElementById('filterHauler').value;
-        const location = document.getElementById('filterLocation').value;
+        const hauler = document.getElementById('filterHauler')?.value;
+        const location = document.getElementById('filterLocation')?.value;
+        const technician = document.getElementById('filterTechnician')?.value;
+        const omnitraq = document.getElementById('filterOmnitraq')?.value;
+        const mdvr = document.getElementById('filterMdvr')?.value;
+        const door = document.getElementById('filterDoor')?.value;
+        const overall = document.getElementById('filterOverall')?.value;
+
         if (search)   params.set('search', search);
         if (hauler)   params.set('hauler_id', hauler);
         if (location) params.set('location', location);
+        if (technician) params.set('technician_id', technician);
+        if (omnitraq) params.set('omnitraq_status', omnitraq);
+        if (mdvr) params.set('mdvr_status', mdvr);
+        if (door) params.set('door_sensor_status', door);
+        if (overall) params.set('overall_status', overall);
 
         const result = await API.get(`${BASE_URL}/admin/api/trucks.php?${params}`);
         const tbody = document.getElementById('trucksBody');
@@ -121,9 +132,18 @@ ob_start();
                     <td>${t.plate_number || '—'}</td>
                     <td>${t.location || '—'}</td>
                     <td>${t.tractor_model || '—'}</td>
-                    <td>${statusBadge(t.omnitraq_status)}</td>
-                    <td>${statusBadge(t.mdvr_status)}</td>
-                    <td>${statusBadge(t.door_sensor_status)}</td>
+                    <td>
+                        ${statusBadge(t.omnitraq_status)}
+                        ${t.omnitraq_tech ? `<div class="text-muted" style="font-size:0.7rem;margin-top:2px;">${t.omnitraq_tech}</div>` : ''}
+                    </td>
+                    <td>
+                        ${statusBadge(t.mdvr_status)}
+                        ${t.mdvr_tech ? `<div class="text-muted" style="font-size:0.7rem;margin-top:2px;">${t.mdvr_tech}</div>` : ''}
+                    </td>
+                    <td>
+                        ${statusBadge(t.door_sensor_status)}
+                        ${t.door_sensor_tech ? `<div class="text-muted" style="font-size:0.7rem;margin-top:2px;">${t.door_sensor_tech}</div>` : ''}
+                    </td>
                     <td class="text-sm text-muted">${formatDateTime(t.updated_at)}</td>
                 </tr>
             `).join('');
@@ -175,14 +195,49 @@ ob_start();
             newHaulerSel.innerHTML += `<option value="${h.id}">${h.name}</option>`;
         });
 
+        const techSel = document.getElementById('filterTechnician');
+        if (techSel) {
+            RefData.get('technicians').forEach(t => {
+                techSel.innerHTML += `<option value="${t.id}">${t.nickname}</option>`;
+            });
+        }
+
         populateLocationSelects();
         populateModelSelects();
-        loadTrucks();
+        
+        // Restore filters from URL if any
+        const urlParams = new URLSearchParams(window.location.search);
+        ['filterLocation', 'filterHauler', 'filterTechnician', 'filterOmnitraq', 'filterMdvr', 'filterDoor', 'filterOverall'].forEach(id => {
+            const key = id.replace('filter', '').toLowerCase();
+            const paramMap = {
+                'location': 'location', 'hauler': 'hauler_id',
+                'technician': 'technician_id', 'omnitraq': 'omnitraq_status',
+                'mdvr': 'mdvr_status', 'door': 'door_sensor_status', 'overall': 'overall_status'
+            };
+            const val = urlParams.get(paramMap[key]);
+            if (val) document.getElementById(id).value = val;
+        });
+        if (urlParams.get('search')) {
+            document.getElementById('truckSearch').value = urlParams.get('search');
+        }
+
+        const startPage = parseInt(urlParams.get('page')) || 1;
+        loadTrucks(startPage);
     }
 
     document.getElementById('truckSearch').addEventListener('input', debounce(() => loadTrucks(1), 300));
-    document.getElementById('filterHauler').addEventListener('change', () => loadTrucks(1));
-    document.getElementById('filterLocation').addEventListener('change', () => loadTrucks(1));
+    
+    // Add event listeners for all filters
+    ['filterHauler', 'filterLocation', 'filterTechnician', 'filterOmnitraq', 'filterMdvr', 'filterDoor', 'filterOverall'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', () => loadTrucks(1));
+    });
+
+    // Clear filters
+    document.getElementById('btnClearFilters')?.addEventListener('click', () => {
+        document.querySelectorAll('.filter-bar select').forEach(s => s.value = '');
+        document.getElementById('truckSearch').value = '';
+        loadTrucks(1);
+    });
 
     document.getElementById('btnAddTruck').addEventListener('click', () => {
         populateLocationSelects();
@@ -259,13 +314,54 @@ $extraJs = ob_get_clean();
 require_once __DIR__ . '/../includes/layout_header.php';
 ?>
 
-<div class="filter-bar">
-    <div class="search-input-wrapper flex-1 min-w-200">
-        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" id="truckSearch" class="form-input" placeholder="Search by Plate # or ME No...">
+<div class="filter-bar mb-4" id="filterBar">
+    <select id="filterLocation" class="form-select">
+        <option value="">All Locations</option>
+    </select>
+    <select id="filterHauler" class="form-select">
+        <option value="">All Haulers</option>
+    </select>
+    <select id="filterTechnician" class="form-select">
+        <option value="">All Technicians</option>
+        <!-- Need to load technicians in JS or PHP. For now handled via RefData if added below -->
+    </select>
+    <select id="filterOmnitraq" class="form-select">
+        <option value="">Omnitraq: All</option>
+        <option value="not_started">Not Started</option>
+        <option value="installed">Installed</option>
+        <option value="verified">Verified</option>
+    </select>
+    <select id="filterMdvr" class="form-select">
+        <option value="">MDVR: All</option>
+        <option value="not_started">Not Started</option>
+        <option value="installed">Installed</option>
+        <option value="verified">Verified</option>
+    </select>
+    <select id="filterDoor" class="form-select">
+        <option value="">Door Sensor: All</option>
+        <option value="not_started">Not Installed</option>
+        <option value="installed">Installed</option>
+    </select>
+    <select id="filterOverall" class="form-select">
+        <option value="">Overall: All</option>
+        <option value="not_started">Not Started</option>
+        <option value="in_progress">In Progress</option>
+        <option value="completed">Completed</option>
+    </select>
+    <button class="btn btn-sm btn-outline btn-icon-text" id="btnClearFilters">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        Clear
+    </button>
+</div>
+
+<div style="margin-bottom: 24px;">
+    <div class="search-input-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="truckSearch" class="topbar-input" placeholder="Search by Plate # or ME No..." autocomplete="off">
     </div>
-    <select id="filterHauler" class="form-select flex-1"><option value="">All Haulers</option></select>
-    <select id="filterLocation" class="form-select flex-1"><option value="">All Locations</option></select>
 </div>
 
 <div class="table-wrapper">

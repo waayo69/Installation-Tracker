@@ -44,7 +44,17 @@ switch (method()) {
             }
             throw $e;
         }
-        json_response(['id' => (int)$db->lastInsertId(), 'success' => true, 'message' => 'Location created'], 201);
+        $newLocId = (int)$db->lastInsertId();
+        
+        // Automatically insert global inventory items for the new location
+        $db->prepare("
+            INSERT INTO inventory_items (name, linked_system, deduction_type, quantity, location_id, is_global)
+            SELECT name, linked_system, deduction_type, 0, ?, 1
+            FROM inventory_items
+            WHERE location_id IS NULL AND is_global = 1
+        ")->execute([$newLocId]);
+
+        json_response(['id' => $newLocId, 'success' => true, 'message' => 'Location created'], 201);
 
     case 'PUT':
         if (!$isAdmin) json_response(['error' => 'Unauthorized'], 403);

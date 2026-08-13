@@ -212,11 +212,13 @@ const RefData = {
     get(key) { return this._cache[key] || []; },
 
     async loadAll() {
-        // Use allSettled so a single failure doesn't abort everything
+        // Start options loading in the background
+        this.load('options', `${BASE_URL}/admin/api/options.php`).catch(e => console.error(e));
+        
+        // Use allSettled for critical data
         await Promise.allSettled([
             this.load('haulers', `${BASE_URL}/admin/api/haulers.php`),
-            this.load('technicians', `${BASE_URL}/admin/api/technicians.php`),
-            this.load('options', `${BASE_URL}/admin/api/options.php`),
+            this.load('technicians', `${BASE_URL}/admin/api/technicians.php`)
         ]);
     },
 };
@@ -346,6 +348,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     initSidebar();
+
+    /* ── Theme Toggle ─────────────────────────────────────────── */
+    (function initThemeToggle() {
+        const toggleBtn = document.getElementById('themeToggle');
+        if (!toggleBtn) return;
+        
+        const sunIcon = toggleBtn.querySelector('.sun-icon');
+        const moonIcon = toggleBtn.querySelector('.moon-icon');
+        
+        let currentTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        
+        function updateIcons() {
+            if (currentTheme === 'light') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+        updateIcons();
+        
+        toggleBtn.addEventListener('click', () => {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+            updateIcons();
+        });
+    })();
 
     /* ── Fun Prank ────────────────────────────────────────────── */
     if (typeof ENABLE_MONKE_PRANK !== 'undefined' && ENABLE_MONKE_PRANK) {

@@ -8,10 +8,12 @@
     let currentDir = 'DESC';
     let completionChart = null;
     let locationChart = null;
+    let cachedRankings = null;
+    let currentLeaderboardTab = 'daily';
 
     /* ── Load Stats ──────────────────────────────────────── */
     async function loadStats() {
-        const location = document.getElementById('filterLocation').value;
+        const location = document.getElementById('filterLocation')?.value || '';
         const params = location ? `?location=${encodeURIComponent(location)}` : '';
         const stats = await API.get(`${BASE_URL}/admin/api/dashboard.php${params}`);
 
@@ -53,13 +55,39 @@
             </div>
         `;
 
-        // Populate location filter from stats — value=id, label=name
+        // Populate location filter from stats if it exists (legacy, or for other views if reused)
         const locSelect = document.getElementById('filterLocation');
-        const currentVal = locSelect.value;
-        locSelect.innerHTML = '<option value="">All Locations</option>';
-        (stats.locations || []).forEach(loc => {
-            locSelect.innerHTML += `<option value="${loc.id}" ${String(loc.id) === currentVal ? 'selected' : ''}>${loc.name}</option>`;
-        });
+        if (locSelect) {
+            const currentVal = locSelect.value;
+            locSelect.innerHTML = '<option value="">All Locations</option>';
+            (stats.locations || []).forEach(loc => {
+                locSelect.innerHTML += `<option value="${loc.id}" ${String(loc.id) === currentVal ? 'selected' : ''}>${loc.name}</option>`;
+            });
+        }
+
+        // Store rankings for tab switching
+        if (stats.rankings) {
+            cachedRankings = stats.rankings;
+            window.switchLeaderboard(currentLeaderboardTab);
+        }
+        
+        // Render Inventory Alerts
+        if (stats.inventory_alerts) {
+            const invList = document.getElementById('inventoryAlertsList');
+            if (stats.inventory_alerts.length === 0) {
+                invList.innerHTML = `<div class="text-sm text-muted">No low stock alerts.</div>`;
+            } else {
+                invList.innerHTML = stats.inventory_alerts.map(item => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding: 4px 6px; background: rgba(239,68,68,0.05); border-left: 3px solid var(--accent-danger); border-radius: 4px;">
+                        <div>
+                            <div style="font-weight:600; font-size:0.75rem; color:var(--text-primary);">${item.name}</div>
+                            <div style="font-size:0.65rem; color:var(--text-muted);">${item.location || 'HQ / Unassigned'}</div>
+                        </div>
+                        <div style="font-weight:700; color:var(--accent-danger); font-size: 0.8rem;">${item.quantity} left</div>
+                    </div>
+                `).join('');
+            }
+        }
 
         renderCharts(stats);
     }
@@ -119,6 +147,7 @@
         currentPage = page;
         const params = new URLSearchParams();
         params.set('page', page);
+        params.set('per_page', 5);
         params.set('sort', currentSort);
         params.set('dir', currentDir);
 
@@ -131,7 +160,7 @@
             mdvr_status: document.getElementById('filterMdvr')?.value,
             door_sensor_status: document.getElementById('filterDoor')?.value,
             overall_status: document.getElementById('filterOverall')?.value,
-            search: document.getElementById('globalSearch').value,
+            search: document.getElementById('globalSearch')?.value,
         };
 
         Object.entries(filters).forEach(([k, v]) => {
@@ -166,9 +195,18 @@
                     <td>${truck.plate_number || '—'}</td>
                     ${(window.USER_ROLE || '') === 'admin' ? `<td>${truck.location || '—'}</td>` : ''}
                     <td>${truck.tractor_model || '—'}</td>
-                    <td>${statusBadge(truck.omnitraq_status)}</td>
-                    <td>${statusBadge(truck.mdvr_status)}${mdvrBadge}</td>
-                    <td>${statusBadge(truck.door_sensor_status)}</td>
+                    <td>
+                        ${statusBadge(truck.omnitraq_status)}
+                        ${truck.omnitraq_tech ? `<div class="text-muted" style="font-size:0.7rem;margin-top:2px;">${truck.omnitraq_tech}</div>` : ''}
+                    </td>
+                    <td>
+                        ${statusBadge(truck.mdvr_status)}${mdvrBadge}
+                        ${truck.mdvr_tech ? `<div class="text-muted" style="font-size:0.7rem;margin-top:2px;">${truck.mdvr_tech}</div>` : ''}
+                    </td>
+                    <td>
+                        ${statusBadge(truck.door_sensor_status)}
+                        ${truck.door_sensor_tech ? `<div class="text-muted" style="font-size:0.7rem;margin-top:2px;">${truck.door_sensor_tech}</div>` : ''}
+                    </td>
                     <td class="text-sm td-wrap">${truck.technicians || '—'}</td>
                     <td class="text-sm text-muted">${formatDateTime(truck.updated_at)}</td>
                 </tr>
@@ -203,9 +241,9 @@
     /* ── Export Excel ───────────────────────────────────────── */
     document.getElementById('btnExport')?.addEventListener('click', async () => {
         const params = new URLSearchParams();
-        const loc = document.getElementById('filterLocation').value;
-        const hid = document.getElementById('filterHauler').value;
-        const search = document.getElementById('globalSearch').value;
+        const loc = document.getElementById('filterLocation')?.value;
+        const hid = document.getElementById('filterHauler')?.value;
+        const search = document.getElementById('globalSearch')?.value;
         if (loc) params.set('location', loc);
         if (hid) params.set('hauler_id', hid);
         if (search) params.set('search', search);
@@ -237,9 +275,11 @@
 
         // Populate technician filter
         const techSelect = document.getElementById('filterTechnician');
-        RefData.get('technicians').forEach(t => {
-            techSelect.innerHTML += `<option value="${t.id}">${t.nickname}</option>`;
-        });
+        if (techSelect) {
+            RefData.get('technicians').forEach(t => {
+                techSelect.innerHTML += `<option value="${t.id}">${t.nickname}</option>`;
+            });
+        }
 
         // Restore filters from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -251,9 +291,11 @@
                 'mdvr': 'mdvr_status', 'door': 'door_sensor_status', 'overall': 'overall_status'
             };
             const val = urlParams.get(paramMap[key]);
-            if (val) document.getElementById(id).value = val;
+            if (val && document.getElementById(id)) {
+                document.getElementById(id).value = val;
+            }
         });
-        if (urlParams.get('search')) {
+        if (urlParams.get('search') && document.getElementById('globalSearch')) {
             document.getElementById('globalSearch').value = urlParams.get('search');
         }
 
@@ -280,7 +322,8 @@
     // Clear filters
     document.getElementById('btnClearFilters')?.addEventListener('click', () => {
         document.querySelectorAll('.filter-bar select').forEach(s => s.value = '');
-        document.getElementById('globalSearch').value = '';
+        const searchInput = document.getElementById('globalSearch');
+        if (searchInput) searchInput.value = '';
         loadStats();
         loadTrucks(1);
     });
@@ -289,5 +332,44 @@
     window.refreshDashboard = () => {
         loadStats();
         loadTrucks(currentPage);
+    };
+
+    window.switchLeaderboard = (tab) => {
+        currentLeaderboardTab = tab;
+        ['daily', 'weekly', 'monthly'].forEach(t => {
+            const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+            if (btn) {
+                btn.className = (t === tab) ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline';
+            }
+        });
+        
+        const list = document.getElementById('leaderboardList');
+        if (!cachedRankings || !cachedRankings[tab]) return;
+        
+        const data = cachedRankings[tab];
+        if (data.length === 0) {
+            list.innerHTML = `<div class="text-sm text-muted">No installs recorded for this period.</div>`;
+            return;
+        }
+        
+        list.innerHTML = data.map((tech, index) => {
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding: 4px 6px; background: var(--bg-card-hover); border-radius: var(--radius-md);">
+                    <div style="display:flex; align-items:center; gap: 8px;">
+                        <span style="font-weight:700; width: 24px; color: var(--text-muted); text-align: center; font-size:0.8rem;">${medal}</span>
+                        <div>
+                            <div style="font-weight:600; font-size:0.75rem; color:var(--text-primary);">${tech.nickname}</div>
+                            <div style="display:flex; gap: 4px; margin-top: 2px;">
+                                <span class="badge badge-verified" style="font-size: 0.6rem; padding: 0 3px;" title="Omnitraq">📡 ${tech.omnitraq_count}</span>
+                                <span class="badge badge-installed" style="font-size: 0.6rem; padding: 0 3px;" title="MDVR">📹 ${tech.mdvr_count}</span>
+                                <span class="badge badge-new" style="font-size: 0.6rem; padding: 0 3px;" title="Door Sensor">🚪 ${tech.door_count}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-weight:700; font-size: 0.9rem; color: var(--accent-primary);">${tech.total}</div>
+                </div>
+            `;
+        }).join('');
     };
 })();

@@ -9,7 +9,7 @@ require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/auth_check.php';
 
-require_admin(true);
+require_admin_or_team_leader(true);
 
 $db = getDB();
 
